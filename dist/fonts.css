@@ -1,0 +1,6 @@
+@font-face{font-family:"Frame Model";src:url("assets/fonts/Roboto.ttf") format("truetype");font-weight:100 900;font-style:normal;font-display:block}
+@font-face{font-family:"Frame Parameters";src:url("assets/fonts/Lato-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:block}
+.caption-field{margin-top:15px;padding-top:15px;border-top:1px solid var(--line)}
+.caption-field label{margin-bottom:8px}
+.caption-field button{width:100%}
+@media(max-width:760px){.caption-field{grid-column:1/-1;display:flex;gap:8px;align-items:flex-end;margin-top:0;padding-top:12px}.editor .caption-field label{flex:1 1 0;min-width:0;margin:0}.editor .caption-field button{flex:0 0 auto;width:auto;margin:0!important;height:36px}}

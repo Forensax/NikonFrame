@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {fromExif,shutterText,parameterLine,uniqueName,isOtherBrand} from '../dist/core.js';
+test('EXIF metadata and equivalent focal length',()=>{assert.deepEqual(fromExif({Model:'NIKON Z 8',DateTimeOriginal:'2026:10:06 12:30:00',FocalLength:50,FocalLengthIn35mmFormat:75,FNumber:2.8,ExposureTime:1/250,ISO:100}),{model:'NIKON Z 8',lens:'',date:'2026.10.06 12:30:00',focal:'75',aperture:'2.8',iso:'100',shutter:'1/250',focalSource:'35mm 等效'});assert.equal(fromExif({FocalLength:50}).focalSource,'实际焦距');});
+test('missing metadata never invents information',()=>{assert.equal(parameterLine(fromExif()),'');assert.equal(fromExif({ISO:[200]}).iso,'200');});
+test('slow shutter stays in seconds',()=>{assert.equal(shutterText(2.5),'2.5');assert.equal(shutterText(.8),'0.8');assert.equal(shutterText(0),'');});
+test('reference parameter spacing and shutter units',()=>{assert.equal(parameterLine({focal:'45',aperture:'6.3',shutter:'1/160',iso:'200'}),'45mm f/6.3 1/160 ISO200');assert.equal(parameterLine({shutter:'2.5'}),'2.5');assert.equal(parameterLine({shutter:'0.8'}),'0.8');});
+test('file names stay unique and safe',()=>{const used=new Set();assert.equal(uniqueName('照片.jpg',used),'照片_尼康边框.jpg');assert.equal(uniqueName('照片.png',used),'照片_尼康边框_2.jpg');assert.equal(uniqueName('../a.jpg',used),'.._a_尼康边框.jpg');});
+test('other camera brands require confirmation',()=>{assert.equal(isOtherBrand({Make:'NIKON CORPORATION'}),false);assert.equal(isOtherBrand({Make:'Canon'}),true);assert.equal(isOtherBrand({Model:'Sony ILCE-7'}),true);assert.equal(isOtherBrand({}),false);});
+
+test('lens model trims text and stays empty when absent',()=>{assert.equal(fromExif({LensModel:'  AF-S NIKKOR 24-70mm f/2.8G ED  '}).lens,'AF-S NIKKOR 24-70mm f/2.8G ED');assert.equal(fromExif().lens,'');assert.equal(fromExif({LensModel:0,FocalLength:50}).lens,'');});
+
+test('XMP lens fallback supports Nikon original JPEGs',()=>{assert.equal(fromExif({Lens:'AF-S DX Nikkor 18-140mm f/3.5-5.6G ED VR'}).lens,'AF-S DX Nikkor 18-140mm f/3.5-5.6G ED VR');assert.equal(fromExif({LensModel:' ',Lens:' XMP lens '}).lens,'XMP lens');assert.equal(fromExif({LensModel:'Standard EXIF lens',Lens:'XMP lens'}).lens,'Standard EXIF lens');assert.equal(fromExif({Lens:12345}).lens,'');});
