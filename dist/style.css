@@ -19,7 +19,7 @@ main{width:100%;max-width:2400px;min-width:0;min-height:0;margin:0 auto;padding:
 .toolbar{flex-shrink:0;margin:0;gap:12px}h1{font-size:clamp(20px,1.171875vw,30px);line-height:1.2}
 .actions{gap:clamp(8px,.46875vw,12px)}
 button,.text-button{height:var(--button-height);padding:0 clamp(10px,.703125vw,18px);font-size:var(--ui-font);font-weight:500;flex-shrink:0}
-.workspace{flex:1;min-height:0;min-width:0;grid-template-columns:clamp(150px,10.15625vw,260px) minmax(0,1fr) clamp(220px,14.0625vw,360px)}
+.workspace{flex:1;min-height:0;min-width:0;grid-template-columns:clamp(180px,13.28125vw,340px) minmax(0,1fr) clamp(220px,14.0625vw,360px)}
 .rail,.editor{min-width:0;min-height:0;padding:0 var(--panel-padding);overflow:hidden}
 .section-title{height:clamp(49px,2.5vw,64px);flex:0 0 clamp(49px,2.5vw,64px);font-size:var(--ui-font)}
 .photo-list{min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:clamp(8px,.546875vw,14px) 0;scrollbar-gutter:stable}
