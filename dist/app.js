@@ -1,4 +1,4 @@
-import {fromExif,isOtherBrand,drawFrame,uniqueName,BAR_RATIO,DEFAULT_CAPTION} from './core.js?v=6';
+import {fromExif,isOtherBrand,drawFrame,uniqueName,BAR_RATIO,DEFAULT_CAPTION} from './core.js?v=9';
 import {readLens} from './lens.js?v=6';
 const $=id=>document.getElementById(id),form=$('metadata'),items=[];let selected=null,busy=false,cancelled=false,previewToken=0,defaultCaption=DEFAULT_CAPTION;const fields=['model','lens','date','focal','aperture','iso','shutter','caption'];
 const bar=new Image();bar.src='assets/nikon-bar_v1.jpg';const barReady=Promise.all([bar.decode(),document.fonts.load('400 62px "Frame Model"'),document.fonts.load('400 62px "Frame Parameters"')]);barReady.catch(()=>setStatus('信息栏资源加载失败，请刷新页面'));
