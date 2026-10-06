@@ -3,3 +3,17 @@
 .editor textarea{display:block;width:100%;min-height:54px;border:1px solid #dbe0e6;border-radius:4px;padding:7px 9px;background:#fff;color:#343b43;font-size:12px;line-height:18px;resize:vertical}.editor textarea:disabled{background:#fafbfc;color:#a7adb5}.editor textarea::placeholder{color:#b2b7bd}@media(max-width:760px){.lens-field{grid-column:1/-1}}
 
 .lens-field{margin-bottom:15px}.lens-field>label{margin-bottom:7px}.lens-presets{display:flex;gap:6px}.editor form .lens-presets button{width:auto;flex:1;min-width:0;margin-bottom:0}@media(max-width:760px){.editor .lens-field{margin-bottom:12px}.editor .lens-field>label{margin-bottom:7px}}
+
+/* Comfortable desktop layout for wide viewports; export canvas stays unchanged. */
+@media(min-width:1800px){
+  :root{--workspace-height:clamp(820px,calc(100dvh - 280px),1120px)}
+  .topbar{height:80px;padding:0 40px}.brand{font-size:28px;gap:14px}.brand-mark{width:40px;height:40px;font-size:28px}.header-status{font-size:14px}
+  main{max-width:2320px;padding:28px 40px 0}.toolbar{margin-bottom:24px}h1{font-size:30px;line-height:1.2}.actions{gap:12px}
+  button{height:48px;padding:0 18px;font-size:18px;font-weight:500}.editor form button{font-weight:500}.text-button{height:48px;padding:0 18px;font-size:18px;font-weight:500}
+  .workspace{grid-template-columns:260px minmax(0,1fr) 360px;height:var(--workspace-height);min-height:0}.section-title{height:64px;flex:0 0 64px;font-size:18px}
+  .rail{padding:0 18px;min-height:0;min-width:0}.photo-list{min-height:0;max-height:none;padding:14px 0}.photo-item{height:86px;padding:8px;gap:12px}.photo-item img{width:58px;height:62px;flex-shrink:0}.photo-item .filename{font-size:16px;max-width:128px}.photo-item small{font-size:13px;margin-top:6px}.list-empty{font-size:16px}
+  .stage{min-height:0;padding:32px 40px}#preview{max-height:calc(var(--workspace-height) - 112px)}.preview-caption{max-width:none;font-size:13px;line-height:1.5;margin-top:16px}.empty h2{font-size:24px}.empty p{font-size:18px}.drop-overlay{font-size:22px}
+  .editor{padding:0 20px;min-height:0;min-width:0;overflow-y:auto}.editor form{padding-top:20px;flex-shrink:0}label{font-size:16px;margin-bottom:14px}input:not([type=checkbox]){height:44px;padding:0 12px;font-size:18px}.editor textarea{height:72px;min-height:72px;padding:10px 12px;font-size:18px;line-height:24px}.lens-field{margin-bottom:14px}.lens-presets{gap:8px}.field-pair{gap:12px}
+  .tag{font-size:13px}.editor-note{font-size:13px;line-height:1.6;flex-shrink:0}.warning{font-size:14px;flex-shrink:0}.check{font-size:14px}.errors{font-size:16px}#progress-wrap{min-height:56px}progress{width:160px;height:7px}
+  footer{max-width:2320px;padding:18px 40px;font-size:12px;gap:4px}
+}
