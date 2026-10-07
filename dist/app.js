@@ -11,7 +11,80 @@ async function decode(file){try{return await createImageBitmap(file,{imageOrient
 function release(img){img?.close?.();}
 async function preview(){const token=++previewToken,item=selected;if(!item){$('dimensions').textContent='';$('dimensions').hidden=true;$('empty').hidden=false;$('preview-wrap').hidden=true;$('preview').width=1;$('preview').height=1;return;}try{const image=await decode(item.file);try{await barReady;if(token!==previewToken)return;const result=drawFrame($('preview'),image,item.info,bar,Math.min(1600,image.width));$('empty').hidden=true;$('preview-wrap').hidden=false;$('dimensions').textContent=`${item.width} × ${item.height+Math.round(item.width*BAR_RATIO)} px`;$('dimensions').hidden=false;}finally{release(image);}}catch{if(token===previewToken)setErrors([`${item.file.name}：预览失败，浏览器可能无法处理该尺寸`]);}}
 function select(item){if(busy)return;selected=item;syncForm();renderList();preview();setStatus(item.file.name);}
-async function importFiles(files){if(busy)return;busy=true;controls();setErrors([]);const failures=[];let added=0;try{for(const [index,file]of Array.from(files).entries()){setStatus(`正在读取 ${index+1} / ${files.length}`);if(!/\.(jpe?g|png|webp)$/i.test(file.name)){failures.push(`${file.name}：请选择 JPG、PNG 或 WebP`);continue;}let image;try{image=await decode(file);if(!image.width||!image.height)throw new Error('图片无效');let tags={};try{tags=await exifr.parse(file,{tiff:true,exif:true,xmp:true,gps:false,translateValues:true,reviveValues:true});}catch{}tags=tags??{};const exifInfo=fromExif(tags);exifInfo.lens=await readLens(file,tags);const info={...exifInfo,caption:defaultCaption},thumbCanvas=document.createElement('canvas');const scale=Math.min(1,160/image.width,160/image.height);thumbCanvas.width=Math.round(image.width*scale);thumbCanvas.height=Math.round(image.height*scale);thumbCanvas.getContext('2d').drawImage(image,0,0,thumbCanvas.width,thumbCanvas.height);const thumb=thumbCanvas.toDataURL('image/jpeg',0.7);const item={id:crypto.randomUUID(),file,width:image.width,height:image.height,thumb,info,original:{...exifInfo},hasExif:Object.values(exifInfo).some(Boolean),otherBrand:isOtherBrand(tags),confirmed:false};items.push(item);selected??=item;added++;}catch{failures.push(`${file.name}：读取失败，文件可能损坏或格式不受支持`);}finally{release(image);}}}finally{busy=false;syncForm();renderList();await preview();setStatus(`已导入 ${added} 张，共 ${items.length} 张`);setErrors(failures);$('files').value='';}}
+function updateImportProgress(completed,total){
+  const percent=Math.floor(completed/total*100);
+  $('import-label').textContent=`导入 ${percent}%`;
+  $('add').title=`已处理 ${completed} / ${total}`;
+  $('add').setAttribute('aria-label',`导入照片：已处理 ${completed} / ${total}，${percent}%`);
+  $('import-progress').max=total;
+  $('import-progress').value=completed;
+  $('import-progress').setAttribute('aria-valuetext',`已处理 ${completed} / ${total}，${percent}%`);
+}
+function beginImportProgress(total){
+  $('add').classList.add('importing');
+  $('add').setAttribute('aria-busy','true');
+  $('import-progress').hidden=false;
+  updateImportProgress(0,total);
+}
+function endImportProgress(){
+  $('add').classList.remove('importing');
+  $('add').removeAttribute('aria-busy');
+  $('add').removeAttribute('aria-label');
+  $('add').removeAttribute('title');
+  $('import-label').textContent='＋ 导入照片';
+  $('import-progress').hidden=true;
+  $('import-progress').value=0;
+  $('import-progress').removeAttribute('aria-valuetext');
+}
+function paintImportProgress(){return new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));}
+async function importFiles(files){
+  if(busy)return;
+  const queue=Array.from(files??[]);
+  if(!queue.length)return;
+  busy=true;
+  clearTimeout(form.previewTimer);
+  controls();setErrors([]);
+  const failures=[];let added=0,lastPaint=performance.now();
+  try{
+    beginImportProgress(queue.length);
+    await paintImportProgress();
+    for(const [index,file]of queue.entries()){
+      setStatus(`正在读取 ${index+1} / ${queue.length}`);
+      let image;
+      try{
+        if(!/\.(jpe?g|png|webp)$/i.test(file.name)){
+          failures.push(`${file.name}：请选择 JPG、PNG 或 WebP`);
+          continue;
+        }
+        image=await decode(file);
+        if(!image.width||!image.height)throw new Error('图片无效');
+        let tags={};try{tags=await exifr.parse(file,{tiff:true,exif:true,xmp:true,gps:false,translateValues:true,reviveValues:true});}catch{}
+        tags=tags??{};
+        const exifInfo=fromExif(tags);exifInfo.lens=await readLens(file,tags);
+        const info={...exifInfo,caption:defaultCaption},thumbCanvas=document.createElement('canvas');
+        const scale=Math.min(1,160/image.width,160/image.height);
+        thumbCanvas.width=Math.round(image.width*scale);thumbCanvas.height=Math.round(image.height*scale);
+        thumbCanvas.getContext('2d').drawImage(image,0,0,thumbCanvas.width,thumbCanvas.height);
+        const thumb=thumbCanvas.toDataURL('image/jpeg',0.7);
+        const item={id:crypto.randomUUID(),file,width:image.width,height:image.height,thumb,info,original:{...exifInfo},hasExif:Object.values(exifInfo).some(Boolean),otherBrand:isOtherBrand(tags),confirmed:false};
+        items.push(item);selected??=item;added++;
+      }catch{
+        failures.push(`${file.name}：读取失败，文件可能损坏或格式不受支持`);
+      }finally{
+        release(image);
+        updateImportProgress(index+1,queue.length);
+        if(performance.now()-lastPaint>=50){await paintImportProgress();lastPaint=performance.now();}
+      }
+    }
+    await paintImportProgress();
+    await preview();
+    setStatus(`已导入 ${added} 张，共 ${items.length} 张`);setErrors(failures);
+  }catch{
+    failures.push('导入未完成，请重试');setStatus('导入未完成');setErrors(failures);
+  }finally{
+    busy=false;endImportProgress();$('files').value='';syncForm();renderList();
+  }
+}
 $('add').onclick=$('empty-add').onclick=()=>$('files').click();$('files').onchange=e=>importFiles(e.target.files);
 let dragDepth=0;document.addEventListener('dragenter',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();dragDepth++;$('drop-zone').classList.add('dragging');}});document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('dragleave',()=>{dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)$('drop-zone').classList.remove('dragging');});document.addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('drop-zone').classList.remove('dragging');if(e.dataTransfer?.files.length)importFiles(e.dataTransfer.files);});
 form.onsubmit=e=>e.preventDefault();form.addEventListener('input',e=>{if(!selected||busy||!fields.includes(e.target.name))return;selected.info[e.target.name]=e.target.value.trim();if(e.target.name==='focal')selected.info.focalSource='手动';clearTimeout(form.previewTimer);form.previewTimer=setTimeout(preview,180);});$('reset').onclick=()=>{if(selected&&!busy){selected.info={...selected.original,caption:selected.info.caption};syncForm();preview();}};$('brand-confirm').onchange=e=>{if(selected){selected.confirmed=e.target.checked;controls();}};
